@@ -12,7 +12,7 @@
     "next": "14.2.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "posthog-js": "^1.179.0",
+    "posthog-js": "^1.268.6",
     "zod": "^3.22.4",
     "lucide-react": "^0.453.0",
     "@sentry/nextjs": "^8.23.0",
