@@ -1,0 +1,28 @@
+[build]
+  publish = "."
+  command = "echo 'Static site - no build required'"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self';"
+
+[[redirects]]
+  from = "/demo"
+  to = "/#contact"
+  status = 302
+
+[[redirects]]
+  from = "/get-started"
+  to = "/#contact"
+  status = 302
+
+[context.production.environment]
+  ENVIRONMENT = "production"

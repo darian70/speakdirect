@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare AI Automation Solutions | OmniAgents</title>
+    <meta name="description" content="HIPAA-compliant AI agents for healthcare practices. Automate patient scheduling, insurance verification, medical record processing, and telehealth support.">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .healthcare-gradient { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="../index.html" class="text-2xl font-bold text-gray-800">OmniAgents</a>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="../index.html#services" class="text-gray-700 hover:text-blue-600 px-3 py-2">Services</a>
+                        <a href="../index.html#industries" class="text-blue-600 font-semibold px-3 py-2">Industries</a>
+                        <a href="../index.html#about" class="text-gray-700 hover:text-blue-600 px-3 py-2">About</a>
+                        <a href="../index.html#pricing" class="text-gray-700 hover:text-blue-600 px-3 py-2">Pricing</a>
+                        <a href="../index.html#contact" class="text-gray-700 hover:text-blue-600 px-3 py-2">Contact</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="../index.html#contact" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300">Get Demo</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="healthcare-gradient text-white pt-24 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold mb-6">
+                    Healthcare AI Solutions That <span class="text-yellow-300">Prioritize Patient Care</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 max-w-4xl mx-auto">
+                    HIPAA-compliant AI agents that streamline patient interactions, reduce administrative burden, and improve care delivery across your healthcare practice.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="../index.html#contact" class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-yellow-300 transition duration-300">
+                        Schedule Healthcare Demo
+                    </a>
+                    <a href="#solutions" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition duration-300">
+                        View Solutions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Healthcare Challenges -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Healthcare Challenges We Solve</h2>
+                <p class="text-xl text-gray-600">Address the most pressing operational issues in healthcare</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <div class="text-red-600 text-4xl mb-4"><i class="fas fa-phone-slash"></i></div>
+                    <h3 class="text-xl font-bold mb-4">Missed Appointments</h3>
+                    <p class="text-gray-600 mb-4">30% of appointments are no-shows, costing practices $150B annually</p>
+                    <div class="text-green-600 font-semibold">Our Solution: 50% reduction in no-shows with automated reminders and rescheduling</div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <div class="text-orange-600 text-4xl mb-4"><i class="fas fa-clock"></i></div>
+                    <h3 class="text-xl font-bold mb-4">Administrative Burden</h3>
+                    <p class="text-gray-600 mb-4">Staff spend 60% of time on administrative tasks instead of patient care</p>
+                    <div class="text-green-600 font-semibold">Our Solution: 70% reduction in admin time through intelligent automation</div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <div class="text-purple-600 text-4xl mb-4"><i class="fas fa-user-clock"></i></div>
+                    <h3 class="text-xl font-bold mb-4">Patient Wait Times</h3>
+                    <p class="text-gray-600 mb-4">Average 24-minute wait times lead to patient dissatisfaction</p>
+                    <div class="text-green-600 font-semibold">Our Solution: Real-time scheduling optimization and patient communication</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Healthcare Solutions -->
+    <section id="solutions" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Healthcare AI Agent Solutions</h2>
+                <p class="text-xl text-gray-600">Specialized agents designed for healthcare workflows</p>
+            </div>
+
+            <!-- Patient Scheduling Agent -->
+            <div class="mb-16 bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 p-8">
+                        <div class="flex items-center mb-4">
+                            <div class="text-blue-600 text-3xl mr-4"><i class="fas fa-calendar-plus"></i></div>
+                            <h3 class="text-2xl font-bold">MedScheduler Pro</h3>
+                            <span class="ml-3 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">HIPAA Compliant</span>
+                        </div>
+                        <p class="text-gray-600 mb-6">Intelligent patient scheduling system that handles appointments, insurance verification, and pre-visit preparation.</p>
+                        <div class="space-y-3 mb-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Insurance verification and authorization</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>EHR integration (Epic, Cerner, Allscripts)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Automated appointment reminders</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Pre-visit questionnaire collection</span>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                            <div class="text-sm text-blue-800">
+                                <strong>ROI Impact:</strong> $50,000+ annual savings per provider through reduced no-shows and optimized scheduling
+                            </div>
+                        </div>
+                        <div class="text-lg font-semibold text-blue-600">From $4,500 setup + $599/month</div>
+                    </div>
+                    <div class="md:w-1/2 bg-blue-50 p-8">
+                        <h4 class="font-bold mb-4">Integration Capabilities:</h4>
+                        <div class="space-y-3">
+                            <div class="bg-white p-3 rounded-lg flex items-center">
+                                <i class="fas fa-hospital text-blue-600 mr-3"></i>
+                                <span>Epic MyChart Integration</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg flex items-center">
+                                <i class="fas fa-user-md text-green-600 mr-3"></i>
+                                <span>Cerner PowerChart</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg flex items-center">
+                                <i class="fas fa-clipboard-list text-purple-600 mr-3"></i>
+                                <span>Allscripts Professional</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg flex items-center">
+                                <i class="fas fa-credit-card text-orange-600 mr-3"></i>
+                                <span>Insurance Eligibility APIs</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg flex items-center">
+                                <i class="fas fa-sms text-red-600 mr-3"></i>
+                                <span>SMS/Email Notifications</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telehealth Support Agent -->
+            <div class="mb-16 bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 bg-green-50 p-8">
+                        <h4 class="font-bold mb-4">Telehealth Features:</h4>
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg">
+                                <h5 class="font-semibold text-green-700 mb-2">Pre-Visit Setup</h5>
+                                <p class="text-sm text-gray-600">Guides patients through technology setup and testing</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg">
+                                <h5 class="font-semibold text-blue-700 mb-2">Technical Support</h5>
+                                <p class="text-sm text-gray-600">Resolves connectivity and platform issues in real-time</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg">
+                                <h5 class="font-semibold text-purple-700 mb-2">Follow-up Care</h5>
+                                <p class="text-sm text-gray-600">Manages post-visit instructions and medication reminders</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 p-8">
+                        <div class="flex items-center mb-4">
+                            <div class="text-green-600 text-3xl mr-4"><i class="fas fa-video"></i></div>
+                            <h3 class="text-2xl font-bold">TeleHealth Assistant</h3>
+                            <span class="ml-3 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">HIPAA Compliant</span>
+                        </div>
+                        <p class="text-gray-600 mb-6">Comprehensive telehealth support agent that manages virtual visits from pre-appointment setup to post-visit follow-up.</p>
+                        <div class="space-y-3 mb-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Platform integration (Zoom, Teams, Doxy.me)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Technical troubleshooting support</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Automated visit reminders and prep</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Post-visit care coordination</span>
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg mb-4">
+                            <div class="text-sm text-green-800">
+                                <strong>Patient Satisfaction:</strong> 95% success rate for first-time telehealth users
+                            </div>
+                        </div>
+                        <div class="text-lg font-semibold text-green-600">From $3,500 setup + $449/month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Records Processing -->
+            <div class="mb-16 bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 p-8">
+                        <div class="flex items-center mb-4">
+                            <div class="text-purple-600 text-3xl mr-4"><i class="fas fa-file-medical"></i></div>
+                            <h3 class="text-2xl font-bold">MedRecord AI</h3>
+                            <span class="ml-3 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">HIPAA Compliant</span>
+                        </div>
+                        <p class="text-gray-600 mb-6">Advanced medical record processing agent that extracts, analyzes, and organizes patient information from various document types.</p>
+                        <div class="space-y-3 mb-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>OCR and handwriting recognition</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>ICD-10 and CPT code extraction</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Clinical data structuring</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check text-green-600 mr-3"></i>
+                                <span>Quality assurance and validation</span>
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg mb-4">
+                            <div class="text-sm text-purple-800">
+                                <strong>Efficiency Gain:</strong> 80% reduction in manual data entry time
+                            </div>
+                        </div>
+                        <div class="text-lg font-semibold text-purple-600">From $6,500 setup + $799/month</div>
+                    </div>
+                    <div class="md:w-1/2 bg-purple-50 p-8">
+                        <h4 class="font-bold mb-4">Document Types Processed:</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white p-3 rounded-lg text-center">
+                                <i class="fas fa-notes-medical text-purple-600 mb-2"></i>
+                                <div class="text-sm font-semibold">Lab Reports</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg text-center">
+                                <i class="fas fa-x-ray text-blue-600 mb-2"></i>
+                                <div class="text-sm font-semibold">Imaging Results</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg text-center">
+                                <i class="fas fa-prescription text-green-600 mb-2"></i>
+                                <div class="text-sm font-semibold">Prescriptions</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg text-center">
+                                <i class="fas fa-file-alt text-orange-600 mb-2"></i>
+                                <div class="text-sm font-semibold">Discharge Notes</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg text-center">
+                                <i class="fas fa-heartbeat text-red-600 mb-2"></i>
+                                <div class="text-sm font-semibold">Vitals Records</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg text-center">
+                                <i class="fas fa-user-injured text-gray-600 mb-2"></i>
+                                <div class="text-sm font-semibold">Referrals</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compliance & Security -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Healthcare Compliance & Security</h2>
+                <p class="text-xl text-gray-600">Built with healthcare regulations at the core</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <div class="text-blue-600 text-4xl mb-4"><i class="fas fa-shield-alt"></i></div>
+                    <h3 class="font-bold mb-2">HIPAA Compliant</h3>
+                    <p class="text-sm text-gray-600">Full HIPAA compliance with BAA agreements</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <div class="text-green-600 text-4xl mb-4"><i class="fas fa-lock"></i></div>
+                    <h3 class="font-bold mb-2">SOC 2 Type II</h3>
+                    <p class="text-sm text-gray-600">Audited security controls and processes</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <div class="text-purple-600 text-4xl mb-4"><i class="fas fa-key"></i></div>
+                    <h3 class="font-bold mb-2">End-to-End Encryption</h3>
+                    <p class="text-sm text-gray-600">AES-256 encryption for all data transmission</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <div class="text-orange-600 text-4xl mb-4"><i class="fas fa-server"></i></div>
+                    <h3 class="font-bold mb-2">On-Premise Option</h3>
+                    <p class="text-sm text-gray-600">Deploy within your secure infrastructure</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Case Studies -->
+    <section class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Healthcare Success Stories</h2>
+                <p class="text-xl text-gray-600">Real results from healthcare practices using our AI agents</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <img src="https://via.placeholder.com/60x60/4facfe/ffffff?text=MC" alt="Metro Clinic" class="w-15 h-15 rounded-full mr-4">
+                        <div>
+                            <h3 class="font-bold">Metro Family Clinic</h3>
+                            <p class="text-gray-600">Multi-location family practice</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-700 mb-4">
+                        "OmniAgents reduced our no-show rate from 28% to 12% in just 30 days. The AI handles all our appointment scheduling and insurance verification, freeing up our staff to focus on patient care."
+                    </blockquote>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-green-600">57%</div>
+                            <div class="text-sm text-gray-600">Reduction in no-shows</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-blue-600">$85K</div>
+                            <div class="text-sm text-gray-600">Annual savings</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600">4.8/5</div>
+                            <div class="text-sm text-gray-600">Patient satisfaction</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <img src="https://via.placeholder.com/60x60/00f2fe/ffffff?text=SC" alt="Specialty Care" class="w-15 h-15 rounded-full mr-4">
+                        <div>
+                            <h3 class="font-bold">Specialty Care Associates</h3>
+                            <p class="text-gray-600">Cardiology and orthopedic practice</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-700 mb-4">
+                        "The telehealth assistant has been a game-changer. Our elderly patients now successfully complete virtual visits without technical issues, and our staff productivity has increased by 40%."
+                    </blockquote>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-green-600">95%</div>
+                            <div class="text-sm text-gray-600">Telehealth success rate</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-blue-600">40%</div>
+                            <div class="text-sm text-gray-600">Staff productivity gain</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600">300%</div>
+                            <div class="text-sm text-gray-600">ROI in 6 months</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 healthcare-gradient text-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-4">Ready to Transform Your Healthcare Practice?</h2>
+            <p class="text-xl mb-8">Join 200+ healthcare practices already improving patient care with AI automation</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="../index.html#contact" class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-yellow-300 transition duration-300">
+                    Schedule Healthcare Demo
+                </a>
+                <a href="tel:1-800-OMNI-AI" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
+                    Speak with Healthcare Specialist
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">OmniAgents</h3>
+                    <p class="text-gray-400">Transforming healthcare with intelligent AI automation solutions.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Healthcare Solutions</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Patient Scheduling</a></li>
+                        <li><a href="#" class="hover:text-white">Telehealth Support</a></li>
+                        <li><a href="#" class="hover:text-white">Medical Records</a></li>
+                        <li><a href="#" class="hover:text-white">Insurance Verification</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Compliance</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">HIPAA Compliance</a></li>
+                        <li><a href="#" class="hover:text-white">SOC 2 Certification</a></li>
+                        <li><a href="#" class="hover:text-white">Security Overview</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-envelope mr-2"></i>SpeakDirectSales@gmail.com</li>
+                        <li><i class="fas fa-phone mr-2"></i>1-800-OMNI-AI</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 OmniAgents. All rights reserved. | HIPAA Compliant | SOC 2 Certified</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

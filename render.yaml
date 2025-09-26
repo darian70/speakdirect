@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: speakdirect-api
+    env: node
+    rootDir: apps/api
+    plan: free
+    autoDeploy: true
+    buildCommand: pnpm install --frozen-lockfile=false && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /health
+    
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: ADMIN_TOKEN
+        sync: false # set in Render Dashboard
+      - key: HMAC_SECRET
+        sync: false # set in Render Dashboard
+      - key: DATABASE_URL
+        sync: false # set Neon Postgres URL in Render
+      - key: STRIPE_SECRET_KEY
+        sync: false # set in Render Dashboard
+      - key: STRIPE_TEST_CUSTOMER_ID
+        sync: false # optional
+      - key: API_PUBLIC_URL
+        value: https://api.speakdirect.xyz
+      - key: TWILIO_ACCOUNT_SID
+        sync: false # optional now
+      - key: TWILIO_AUTH_TOKEN
+        sync: false # optional now
+      - key: TWILIO_CALLER_ID
+        sync: false # optional now (E.164)
+      - key: DEFAULT_TECH_NUMBER
+        sync: false # optional now (E.164)
+      - key: SMTP_HOST
+        sync: false # optional
+      - key: SMTP_PORT
+        sync: false # optional
+      - key: SMTP_USER
+        sync: false # optional
+      - key: SMTP_PASS
+        sync: false # optional
+      - key: SMTP_FROM
+        sync: false # optional
+      - key: ALLOWED_ORIGINS
+        value: https://speakdirect.xyz,https://www.speakdirect.xyz

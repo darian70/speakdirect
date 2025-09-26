@@ -1,0 +1,28 @@
+{
+  "name": "@omniagents/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "stripe": "^14.24.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.12",
+    "twilio": "^4.21.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "@types/nodemailer": "^7.0.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.0"
+  }
+}

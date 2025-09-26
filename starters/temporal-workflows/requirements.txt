@@ -1,0 +1,6 @@
+temporalio>=1.7.0
+
+# Optional observability
+sentry-sdk>=1.40.6
+opentelemetry-sdk>=1.25.0
+opentelemetry-exporter-otlp>=1.25.0

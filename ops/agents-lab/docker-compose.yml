@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  flowise:
+    image: flowiseai/flowise:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - FLOWISE_USERNAME=admin
+      - FLOWISE_PASSWORD=admin
+    depends_on:
+      - qdrant
+
+  temporal:
+    image: temporalio/auto-setup:latest
+    ports:
+      - "7233:7233"
+    environment:
+      - DB=sqlite
+
+  temporal-ui:
+    image: temporalio/ui:latest
+    ports:
+      - "8233:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    depends_on:
+      - temporal
+
+volumes:
+  qdrant_data:

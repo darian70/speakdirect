@@ -1,0 +1,22 @@
+{
+  "name": "@omniagents/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/client.ts",
+  "types": "src/client.ts",
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.18.0",
+    "typescript": "^5.4.0"
+  }
+}

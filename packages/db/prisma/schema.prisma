@@ -1,0 +1,111 @@
+// Prisma schema for multi-tenant SaaS
+// DB: Neon Postgres (recommended)
+// Run: pnpm --filter @omniagents/db prisma:migrate:dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  memberships Membership[]
+  agents      Agent[]
+  entitlements Entitlement[]
+  subscriptions Subscription[]
+  usage       UsageEvent[]
+}
+
+model User {
+  id          String   @id @default(cuid())
+  // External ID from identity provider (Clerk/Auth0)
+  externalId  String   @unique
+  email       String   @unique
+  name        String?
+  createdAt   DateTime @default(now())
+  memberships Membership[]
+}
+
+model Membership {
+  id        String  @id @default(cuid())
+  role      Role
+  userId    String
+  tenantId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([userId, tenantId])
+}
+
+enum Role {
+  owner
+  admin
+  operator
+  viewer
+}
+
+model Agent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  status    AgentStatus @default(DRAFT)
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+enum AgentStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+}
+
+model Entitlement {
+  id        String   @id @default(cuid())
+  tenantId  String
+  key       String
+  // optional value, e.g., quota amounts
+  value     String?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, key])
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  tenantId   String
+  provider   String   // "stripe"
+  customerId String
+  priceId    String?
+  status     String
+  meta       Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model UsageEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  type      String   // e.g., "message", "minute", "call", "inference"
+  amount    Int      // count of units
+  ts        DateTime @default(now())
+  meta      Json?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId, ts])
+}

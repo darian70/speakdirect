@@ -1,0 +1,10 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "timezone": "America/Los_Angeles",
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {"matchManagers": ["npm"], "matchPackagePatterns": ["^@?types/"], "groupName": "types"}
+  ]
+}
