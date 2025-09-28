@@ -44,3 +44,23 @@ services:
         sync: false # optional
       - key: ALLOWED_ORIGINS
         value: https://speakdirect.xyz,https://www.speakdirect.xyz
+  - type: web
+    name: speakdirect-voice-bridge
+    env: node
+    rootDir: Auto service phone caller/apps/voice-bridge
+    plan: free
+    autoDeploy: true
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /stream
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: ELEVENLABS_API_KEY
+        sync: false # set if you want live TTS/ASR; otherwise logs only
+      - key: ELEVENLABS_VOICE_ID
+        sync: false
+      - key: ELEVENLABS_AGENT_ID
+        sync: false
+      - key: ELEVENLABS_REALTIME_URL
+        sync: false # defaults to vendor URL if unset

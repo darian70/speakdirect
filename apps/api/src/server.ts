@@ -311,6 +311,8 @@ const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || "";
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || "";
 const TWILIO_CALLER_ID = process.env.TWILIO_CALLER_ID || ""; // E.164
 const DEFAULT_TECH_NUMBER = process.env.DEFAULT_TECH_NUMBER || ""; // E.164
+// Optional: a WebSocket endpoint to stream audio via Twilio Media Streams (wss://.../stream)
+const VOICE_BRIDGE_WSS_URL = process.env.VOICE_BRIDGE_WSS_URL || "";
 
 const haveTwilio = !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_CALLER_ID);
 const twilioClient = haveTwilio ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
@@ -487,6 +489,18 @@ app.get("/twiml/bridge", (req: Request, res: Response) => {
   }
   const recordAttr = record ? " record=\"record-from-answer\"" : "";
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Dial callerId="${TWILIO_CALLER_ID}"${recordAttr}>${client}</Dial>\n</Response>`;
+  res.type("text/xml").send(xml);
+});
+
+// TwiML endpoint for inbound calls: start a Twilio Media Stream to our WebSocket voice bridge
+// Configure your Twilio number voice webhook to POST to: ${API_PUBLIC_URL}/twilio/voice/inbound
+app.post("/twilio/voice/inbound", (req: Request, res: Response) => {
+  if (!VOICE_BRIDGE_WSS_URL) {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Say>Voice streaming is not configured yet.</Say>\n</Response>`;
+    res.type("text/xml").send(xml);
+    return;
+  }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Start>\n    <Stream url="${VOICE_BRIDGE_WSS_URL}" />\n  </Start>\n  <Say>Streaming audio. You are connected.</Say>\n  <Pause length="60"/>\n</Response>`;
   res.type("text/xml").send(xml);
 });
 
