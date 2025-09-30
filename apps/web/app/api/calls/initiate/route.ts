@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { clientNumber, technicianNumber, record = true, statusCallbackUrl } = body || {}
+    const { clientNumber, technicianNumber, record = true, statusCallbackUrl, workOrderData } = body || {}
 
     // Basic validation
     const e164 = /^\+\d{7,15}$/
@@ -20,13 +20,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'server_not_configured' }, { status: 500 })
     }
 
+    // Prepare payload with work order data
+    const payload: any = { clientNumber, technicianNumber, record, statusCallbackUrl }
+    if (workOrderData) {
+      payload.meta = { workOrder: workOrderData }
+    }
+
     const res = await fetch(`${apiBase.replace(/\/$/, '')}/calls/initiate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${adminToken}`,
       },
-      body: JSON.stringify({ clientNumber, technicianNumber, record, statusCallbackUrl }),
+      body: JSON.stringify(payload),
       // Ensure server-side fetch
       cache: 'no-store',
     })

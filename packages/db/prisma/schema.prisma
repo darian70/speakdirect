@@ -22,6 +22,9 @@ model Tenant {
   entitlements Entitlement[]
   subscriptions Subscription[]
   usage       UsageEvent[]
+  // Back-relations
+  calls       Call[]
+  phoneNumbers PhoneNumber[]
 }
 
 model User {
@@ -108,4 +111,72 @@ model UsageEvent {
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
   @@index([tenantId, ts])
+}
+
+/// Telephony call record
+model Call {
+  id           String   @id @default(cuid())
+  tenantId     String
+  agentId      String?
+  provider     String?   // "twilio" | "livekit"
+  providerCallId String? // Twilio CallSid or LiveKit call identifier
+  direction    String    // "inbound" | "outbound"
+  from         String
+  to           String
+  status       String
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  durationSec  Int?
+  recordingUrl String?
+  costCents    Int?
+  meta         Json?
+
+  // Optional association to provisioned phone number (for inbound calls)
+  phoneNumberId String?
+  phoneNumber   PhoneNumber? @relation(fields: [phoneNumberId], references: [id])
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  // Back-relations
+  events      CallEvent[]
+  transcripts Transcript[]
+
+  @@index([tenantId, startedAt])
+  @@index([provider, providerCallId])
+}
+
+model CallEvent {
+  id      String   @id @default(cuid())
+  callId  String
+  type    String
+  ts      DateTime @default(now())
+  payload Json?
+
+  call Call @relation(fields: [callId], references: [id])
+  @@index([callId, ts])
+}
+
+model Transcript {
+  id      String   @id @default(cuid())
+  callId  String
+  channel String   // "agent" | "caller"
+  text    String
+  ts      DateTime @default(now())
+
+  call Call @relation(fields: [callId], references: [id])
+  @@index([callId, ts])
+}
+
+/// Provisioned phone numbers for inbound routing
+model PhoneNumber {
+  id        String   @id @default(cuid())
+  tenantId  String
+  e164      String   @unique
+  label     String?
+  provider  String?  // "twilio"
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  // Back-relations
+  calls  Call[]
 }

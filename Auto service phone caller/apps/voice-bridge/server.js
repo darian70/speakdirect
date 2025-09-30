@@ -62,6 +62,55 @@ function pcm16ToBase64(pcm16) {
   return buf.toString('base64')
 }
 
+// --- μ-law encode helpers (for outbound to Twilio) ---
+function linearSampleToMuLaw(sample) {
+  // Clamp to int16
+  if (sample > 32767) sample = 32767
+  if (sample < -32768) sample = -32768
+  const sign = (sample < 0) ? 0x80 : 0x00
+  if (sample < 0) sample = -sample
+  // μ-law bias
+  sample = sample + 0x84
+  if (sample > 0x7FFF) sample = 0x7FFF
+  let exponent = 7
+  for (let expMask = 0x4000; (sample & expMask) === 0 && exponent > 0; expMask >>= 1) {
+    exponent--
+  }
+  const mantissa = (sample >> ((exponent === 0) ? 4 : (exponent + 3))) & 0x0F
+  const mu = ~(sign | (exponent << 4) | mantissa) & 0xFF
+  return mu
+}
+
+function encodePCM16ToMuLawBase64(pcm16) {
+  const out = Buffer.allocUnsafe(pcm16.length)
+  for (let i = 0; i < pcm16.length; i++) {
+    out[i] = linearSampleToMuLaw(pcm16[i])
+  }
+  return out.toString('base64')
+}
+
+function generateBeepPCM16(durationMs = 400, freqHz = 440, sampleRate = 8000, amplitude = 8000) {
+  const totalSamples = Math.floor(sampleRate * (durationMs / 1000))
+  const out = new Int16Array(totalSamples)
+  const twoPiF = 2 * Math.PI * freqHz
+  for (let i = 0; i < totalSamples; i++) {
+    const t = i / sampleRate
+    out[i] = Math.floor(amplitude * Math.sin(twoPiF * t))
+  }
+  return out
+}
+
+function chunkBase64MuLawFromPCM16(pcm16, frameMs = 20, sampleRate = 8000) {
+  const samplesPerFrame = Math.floor(sampleRate * (frameMs / 1000)) // 160 samples @ 8k for 20ms
+  const frames = []
+  for (let i = 0; i < pcm16.length; i += samplesPerFrame) {
+    const slice = pcm16.subarray(i, Math.min(i + samplesPerFrame, pcm16.length))
+    const b64 = encodePCM16ToMuLawBase64(slice)
+    frames.push(b64)
+  }
+  return frames
+}
+
 // Prepare vendor-specific frame. Adjust to match ElevenLabs realtime protocol if needed.
 function makeElevenLabsAudioFrame(pcm16_16k) {
   // Many realtime APIs expect JSON frames with base64-encoded PCM16 and metadata
@@ -101,6 +150,8 @@ wss.on('connection', (ws, req) => {
 
   // Per-connection ElevenLabs session
   let el = { ws: null, ready: false }
+  let streamSid = null
+  let outboundTimer = null
 
   // Twilio sends JSON messages with event types: start, media, mark, stop
   ws.on('message', (msg) => {
@@ -108,6 +159,7 @@ wss.on('connection', (ws, req) => {
       const data = JSON.parse(msg.toString())
       if (data.event === 'start') {
         console.log('[voice-bridge] start stream', data.start?.streamSid)
+        streamSid = data.start?.streamSid || null
         // Open ElevenLabs realtime connection on start
         el = connectElevenLabs()
         if (el.ws) {
@@ -144,6 +196,32 @@ wss.on('connection', (ws, req) => {
             el.ws = null
           })
         }
+        // Send a short beep back to Twilio to prove outbound path works (no external keys required)
+        try {
+          if (streamSid && !outboundTimer) {
+            const pcmBeep = generateBeepPCM16(600, 660, 8000, 7000)
+            const frames = chunkBase64MuLawFromPCM16(pcmBeep, 20, 8000)
+            let idx = 0
+            outboundTimer = setInterval(() => {
+              if (idx >= frames.length) {
+                clearInterval(outboundTimer)
+                outboundTimer = null
+                return
+              }
+              const frameB64 = frames[idx++]
+              // Basic backpressure guard
+              if (ws.readyState === WebSocket.OPEN && ws.bufferedAmount < 1_000_000) {
+                const outbound = {
+                  event: 'media',
+                  streamSid: streamSid,
+                  track: 'outbound',
+                  media: { payload: frameB64 },
+                }
+                try { ws.send(JSON.stringify(outbound)) } catch (_) {}
+              }
+            }, 20)
+          }
+        } catch (_) {}
       } else if (data.event === 'media') {
         // data.media.payload is base64-encoded mulaw or opus depending on config (mulaw by default)
         // Here we would forward audio to ElevenLabs Realtime via its WS API
@@ -161,6 +239,8 @@ wss.on('connection', (ws, req) => {
         // marker from Twilio, ignore
       } else if (data.event === 'stop') {
         console.log('[voice-bridge] stop stream', data.stop?.streamSid)
+        streamSid = null
+        if (outboundTimer) { try { clearInterval(outboundTimer) } catch (_) {} outboundTimer = null }
         if (el.ws) {
           try { el.ws.close(1000) } catch (_) {}
           el.ws = null
@@ -173,6 +253,8 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     console.log('[voice-bridge] client disconnected')
+    streamSid = null
+    if (outboundTimer) { try { clearInterval(outboundTimer) } catch (_) {} outboundTimer = null }
     if (el.ws) {
       try { el.ws.close(1000) } catch (_) {}
       el.ws = null

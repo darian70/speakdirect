@@ -12,6 +12,7 @@ type NavItem = { label: string; href: string; requires?: { feature?: 'channels.v
 
 const nav: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Calls', href: '/calls' },
   { label: 'Agents', href: '/agents' },
   { label: 'Technicians', href: '/console/technicians', requires: { feature: 'channels.voice' } },
   { label: 'Analytics', href: '/analytics' },

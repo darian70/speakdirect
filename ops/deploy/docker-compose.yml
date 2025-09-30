@@ -1,0 +1,47 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: ../../
+      dockerfile: apps/api/Dockerfile
+    image: speakdirect/api:latest
+    env_file:
+      - ../../apps/api/.env
+    environment:
+      - PORT=8081
+      # Ensure API_PUBLIC_URL is set to your public https URL in production
+      # - API_PUBLIC_URL=https://api.yourdomain.com
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../../
+      dockerfile: apps/web/Dockerfile
+    image: speakdirect/web:latest
+    environment:
+      - PORT=3000
+      - API_BASE_URL=http://api:8081
+      - API_ADMIN_TOKEN=${API_ADMIN_TOKEN:-change_me}
+      - NEXT_PUBLIC_SITE_URL=https://app.yourdomain.com
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  voice_bridge:
+    build:
+      context: ../../Auto service phone caller/apps/voice-bridge
+      dockerfile: Dockerfile
+    image: speakdirect/voice-bridge:latest
+    environment:
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+networks:
+  default:
+    name: speakdirect

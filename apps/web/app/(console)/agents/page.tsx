@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, FormEvent } from 'react'
+import Link from 'next/link'
 import { usePlan } from '../../../lib/plan'
 import { hasFeature } from '@shared/plans'
 
@@ -120,9 +121,16 @@ export default function AgentsPage() {
           ) : agents.map((a) => (
             <div key={a.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="text-sm font-medium text-white/85">{a.name}</div>
-              <div className="text-xs text-white/60">Status: {a.status ?? 'Draft'}</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                  a.status === 'ACTIVE' ? 'bg-green-500/20 text-green-200' :
+                  a.status === 'PAUSED' ? 'bg-yellow-500/20 text-yellow-200' :
+                  'bg-white/10 text-white/60'
+                }`}>{a.status ?? 'DRAFT'}</span>
+                <span className="text-xs text-white/60">{a.config?.channel || 'chat'}</span>
+              </div>
               <div className="mt-3 flex gap-2">
-                <button className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">Configure</button>
+                <Link href={`/agents/${a.id}`} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">Configure</Link>
                 <button className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">Test</button>
                 <button onClick={() => deleteAgent(a.id)} className="rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 text-xs text-red-200">Delete</button>
               </div>

@@ -44,8 +44,9 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json" }), (req: Re
 
  
 
-// Parse JSON for all non-Stripe routes
+// Parse JSON and URL-encoded bodies for all non-Stripe routes
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 const isProd = process.env.NODE_ENV === 'production';
 function isAuthorized(req: Request): boolean {
@@ -249,12 +250,10 @@ function ensureDbConfigured(res: Response): boolean {
 let _prisma: any = null;
 function getPrisma() {
   if (!_prisma) {
-    // Lazy require Prisma only when a DATABASE_URL is provided and a DB-backed
-    // endpoint is actually invoked. This avoids import-time errors when prisma
-    // client has not been generated for local, DB-less development.
+    // Use the central Prisma client from the monorepo package @omniagents/db
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { PrismaClient } = require("@prisma/client");
-    _prisma = new PrismaClient();
+    const { prisma } = require("@omniagents/db");
+    _prisma = prisma;
   }
   return _prisma;
 }
@@ -317,6 +316,23 @@ const VOICE_BRIDGE_WSS_URL = process.env.VOICE_BRIDGE_WSS_URL || "";
 const haveTwilio = !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_CALLER_ID);
 const twilioClient = haveTwilio ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
 
+function validateTwilioRequest(req: Request): boolean {
+  try {
+    if (!TWILIO_AUTH_TOKEN) return true;
+    const signature = String(req.header("x-twilio-signature") || "");
+    const path = req.originalUrl || "/";
+    const base = API_PUBLIC_URL || `${(req as any).protocol || "http"}://${req.get("host") || "localhost"}`;
+    const url = `${base.replace(/\/$/, "")}${path}`;
+    // For urlencoded, req.body is a plain object; for JSON, Twilio won't use JSON for these webhooks
+    // Use the library's helper directly to avoid typing issues
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { validateRequest } = require('twilio/lib/webhooks/webhooks');
+    return validateRequest(TWILIO_AUTH_TOKEN, signature, url, (req as any).body || {});
+  } catch {
+    return false;
+  }
+}
+
 // Nodemailer transporter (optional)
 const haveSMTP = !!(SMTP_HOST && SMTP_USER && SMTP_PASS);
 const transporter = haveSMTP
@@ -347,6 +363,35 @@ interface Lead {
 const leads: Lead[] = [];
 type AgentRecord = { id: string; tenantId: string; name: string; status: "DRAFT"|"ACTIVE"|"PAUSED"; config: any; createdAt: string; updatedAt: string };
 const agentsMem: AgentRecord[] = [];
+
+// In-memory telephony stores (used when DATABASE_URL is not set)
+type CallRecord = {
+  id: string;
+  tenantId: string;
+  agentId?: string | null;
+  provider?: string | null;
+  providerCallId?: string | null;
+  direction: "inbound" | "outbound";
+  from: string;
+  to: string;
+  status: string;
+  startedAt: string;
+  endedAt?: string | null;
+  durationSec?: number | null;
+  recordingUrl?: string | null;
+  costCents?: number | null;
+  meta?: any;
+  phoneNumberId?: string | null;
+};
+type CallEventRecord = { id: string; callId: string; type: string; ts: string; payload?: any };
+type TranscriptRecord = { id: string; callId: string; channel: string; text: string; ts: string };
+
+const callsMem: CallRecord[] = [];
+const callEventsMem: CallEventRecord[] = [];
+const transcriptsMem: TranscriptRecord[] = [];
+
+type PhoneNumberRecord = { id: string; tenantId: string; e164: string; label?: string | null; provider?: string | null; createdAt: string };
+const phoneNumbersMem: PhoneNumberRecord[] = [];
 
 // --- Helpers ---
 function base64url(input: Buffer | string) {
@@ -435,6 +480,7 @@ const CallInitSchema = z.object({
   technicianNumber: PhoneE164.optional(),
   record: z.boolean().optional().default(true),
   statusCallbackUrl: z.string().url().optional(),
+  meta: z.record(z.any()).optional(),
 });
 
 app.post("/calls/initiate", async (req: Request, res: Response) => {
@@ -453,9 +499,10 @@ app.post("/calls/initiate", async (req: Request, res: Response) => {
     return res.status(400).json({ ok: false, error: "invalid_request", details: parsed.error.flatten() });
   }
 
-  const { clientNumber, technicianNumber, record, statusCallbackUrl } = parsed.data;
+  const { clientNumber, technicianNumber, record, statusCallbackUrl, meta } = parsed.data;
   const tech = technicianNumber || DEFAULT_TECH_NUMBER;
   if (!tech) return res.status(400).json({ ok: false, error: "missing_technician_number" });
+  const tenantId = String(req.header("x-tenant-id") || "default");
 
   try {
     // We'll call the technician first. When they answer, Twilio will request our TwiML which dials the client.
@@ -471,6 +518,41 @@ app.post("/calls/initiate", async (req: Request, res: Response) => {
       statusCallbackEvent: statusCallbackUrl ? ["initiated", "ringing", "answered", "completed"] : undefined,
       statusCallbackMethod: statusCallbackUrl ? ("POST" as const) : undefined,
     });
+
+    // Store call record with work order metadata
+    try {
+      if (process.env.DATABASE_URL) {
+        const prisma = getPrisma();
+        await prisma.call.create({
+          data: {
+            tenantId,
+            provider: "twilio",
+            providerCallId: call.sid,
+            direction: "outbound",
+            from: TWILIO_CALLER_ID,
+            to: clientNumber,
+            status: "initiated",
+            meta: meta || undefined,
+          },
+        });
+      } else {
+        callsMem.push({
+          id: crypto.randomUUID(),
+          tenantId,
+          provider: "twilio",
+          providerCallId: call.sid,
+          direction: "outbound",
+          from: TWILIO_CALLER_ID,
+          to: clientNumber,
+          status: "initiated",
+          startedAt: new Date().toISOString(),
+          meta: meta || undefined,
+        });
+      }
+    } catch (e) {
+      console.warn("[initiate] failed to create call record:", (e as any)?.message || e);
+    }
+
     return res.json({ ok: true, sid: call.sid });
   } catch (err) {
     const msg = (err as any)?.message || String(err);
@@ -492,22 +574,242 @@ app.get("/twiml/bridge", (req: Request, res: Response) => {
   res.type("text/xml").send(xml);
 });
 
-// TwiML endpoint for inbound calls: start a Twilio Media Stream to our WebSocket voice bridge
-// Configure your Twilio number voice webhook to POST to: ${API_PUBLIC_URL}/twilio/voice/inbound
-app.post("/twilio/voice/inbound", (req: Request, res: Response) => {
+// TwiML endpoint for inbound calls. Twilio sends application/x-www-form-urlencoded.
+// Configure your Twilio number Voice webhook to POST to: ${API_PUBLIC_URL}/twilio/voice/inbound
+app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
+  // Optional signature validation (recommended in production)
+  if (isProd && !validateTwilioRequest(req)) {
+    return res.status(403).type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?><Response><Reject reason="rejected"/></Response>`);
+  }
+  // Extract common Twilio params
+  const from = String((req.body as any)?.From || "");
+  const to = String((req.body as any)?.To || "");
+  const callSid = String((req.body as any)?.CallSid || "");
+
+  // Resolve tenant by provisioned phone number (To)
+  let tenantId = "default";
+  let phoneNumberId: string | undefined = undefined;
+  try {
+    if (process.env.DATABASE_URL) {
+      const prisma = getPrisma();
+      const pn = await prisma.phoneNumber.findUnique({ where: { e164: to } });
+      if (pn) { tenantId = pn.tenantId; phoneNumberId = pn.id; }
+    } else {
+      const pn = phoneNumbersMem.find((p) => p.e164 === to);
+      if (pn) { tenantId = pn.tenantId; phoneNumberId = pn.id; }
+    }
+  } catch (_) {}
+
+  // Create call record (in-progress)
+  try {
+    if (process.env.DATABASE_URL) {
+      const prisma = getPrisma();
+      await prisma.call.create({
+        data: {
+          tenantId,
+          agentId: null,
+          provider: "twilio",
+          providerCallId: callSid || undefined,
+          direction: "inbound",
+          from,
+          to,
+          status: "in-progress",
+          phoneNumberId: phoneNumberId || undefined,
+        },
+      });
+    } else {
+      callsMem.push({
+        id: crypto.randomUUID(),
+        tenantId,
+        agentId: null,
+        provider: "twilio",
+        providerCallId: callSid || undefined,
+        direction: "inbound",
+        from,
+        to,
+        status: "in-progress",
+        startedAt: new Date().toISOString(),
+        phoneNumberId: phoneNumberId || null,
+      });
+    }
+  } catch (e) {
+    console.warn("[inbound] failed to create call record:", (e as any)?.message || e);
+  }
+
+  // Respond with TwiML
   if (!VOICE_BRIDGE_WSS_URL) {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Say>Voice streaming is not configured yet.</Say>\n</Response>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Say voice="Polly.Matthew">Thanks for calling. A technician will get back to you shortly.</Say>\n  <Pause length="3"/>\n  <Hangup/>\n</Response>`;
     res.type("text/xml").send(xml);
     return;
   }
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Start>\n    <Stream url="${VOICE_BRIDGE_WSS_URL}" />\n  </Start>\n  <Say>Streaming audio. You are connected.</Say>\n  <Pause length="60"/>\n</Response>`;
+  // Append tenant id as a query param for observability in the bridge
+  let streamUrl = VOICE_BRIDGE_WSS_URL;
+  try {
+    const u = new URL(VOICE_BRIDGE_WSS_URL);
+    u.searchParams.set("tenant_id", tenantId);
+    streamUrl = u.toString();
+  } catch { /* leave as-is if invalid */ }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Start>\n    <Stream url="${streamUrl}" />\n  </Start>\n  <Say>Streaming audio. You are connected.</Say>\n  <Pause length="60"/>\n</Response>`;
   res.type("text/xml").send(xml);
 });
 
 // Optional: status callback receiver for logging
-app.post("/calls/status", (req: Request, res: Response) => {
-  console.log("[Twilio Status]", req.body);
+// Twilio Status Callback (set in Twilio Console on the phone number, or via API)
+// Twilio posts application/x-www-form-urlencoded with fields like CallStatus, CallSid, Timestamp, RecordingUrl
+app.post("/twilio/voice/status", (req: Request, res: Response) => {
+  if (isProd && !validateTwilioRequest(req)) {
+    return res.status(403).json({ ok: false, error: "invalid_signature" });
+  }
+  const body = (req.body || {}) as Record<string, any>;
+  const status = String(body.CallStatus || body.call_status || "");
+  const sid = String(body.CallSid || body.call_sid || "");
+  const recordingUrl = body.RecordingUrl ? String(body.RecordingUrl) : undefined;
+  const duration = body.CallDuration ? Number(body.CallDuration) : (body.RecordingDuration ? Number(body.RecordingDuration) : undefined);
+  const from = String(body.From || "");
+  const to = String(body.To || "");
+
+  // Update DB or in-memory
+  (async () => {
+    try {
+      if (process.env.DATABASE_URL) {
+        const prisma = getPrisma();
+        const existing = await prisma.call.findFirst({ where: { provider: "twilio", providerCallId: sid } });
+        if (existing) {
+          await prisma.call.update({
+            where: { id: existing.id },
+            data: {
+              status: status || existing.status,
+              endedAt: status === "completed" ? new Date() : undefined,
+              durationSec: typeof duration === "number" && !Number.isNaN(duration) ? duration : undefined,
+              recordingUrl: recordingUrl || undefined,
+            },
+          });
+          await prisma.callEvent.create({ data: { callId: existing.id, type: status || "status", payload: body } });
+        } else {
+          // Create a minimal record if we missed the inbound hook
+          const created = await prisma.call.create({
+            data: { tenantId: "default", provider: "twilio", providerCallId: sid, direction: "inbound", from, to, status: status || "completed" },
+          });
+          await prisma.callEvent.create({ data: { callId: created.id, type: status || "status", payload: body } });
+        }
+      } else {
+        const c = callsMem.find((c) => c.provider === "twilio" && c.providerCallId === sid);
+        if (c) {
+          c.status = status || c.status;
+          if (status === "completed") c.endedAt = new Date().toISOString();
+          if (typeof duration === "number" && !Number.isNaN(duration)) c.durationSec = duration;
+          if (recordingUrl) c.recordingUrl = recordingUrl;
+          callEventsMem.push({ id: crypto.randomUUID(), callId: c.id, type: status || "status", ts: new Date().toISOString(), payload: body });
+        }
+      }
+    } catch (e) {
+      console.warn("[status] update failed:", (e as any)?.message || e);
+    }
+  })();
+
   res.json({ ok: true });
+});
+
+// Simple status receiver kept for compatibility
+app.post("/calls/status", (req: Request, res: Response) => {
+  console.log("[Status generic]", req.body);
+  res.json({ ok: true });
+});
+
+// --- Tenant-scoped Calls API ---
+app.get("/calls", async (req: Request, res: Response) => {
+  const tenantId = String(req.header("x-tenant-id") || "default");
+  const limit = Math.min(200, Number(req.query.limit) || 50);
+  try {
+    if (process.env.DATABASE_URL) {
+      const prisma = getPrisma();
+      const calls = await prisma.call.findMany({ where: { tenantId }, orderBy: { startedAt: "desc" }, take: limit });
+      return res.json({ ok: true, calls });
+    }
+    const calls = callsMem.filter((c) => c.tenantId === tenantId).sort((a, b) => (b.startedAt || "").localeCompare(a.startedAt || ""));
+    return res.json({ ok: true, calls: calls.slice(0, limit) });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: "calls_list_failed", message: e?.message });
+  }
+});
+
+app.get("/calls/:id", async (req: Request, res: Response) => {
+  const id = String(req.params.id || "");
+  const tenantId = String(req.header("x-tenant-id") || "default");
+  if (!id) return res.status(400).json({ ok: false, error: "missing_id" });
+  try {
+    if (process.env.DATABASE_URL) {
+      const prisma = getPrisma();
+      const call = await prisma.call.findFirst({ where: { id, tenantId } });
+      if (!call) return res.status(404).json({ ok: false, error: "not_found" });
+      const events = await prisma.callEvent.findMany({ where: { callId: id }, orderBy: { ts: "asc" } });
+      const transcript = await prisma.transcript.findMany({ where: { callId: id }, orderBy: { ts: "asc" } });
+      return res.json({ ok: true, call, events, transcript });
+    }
+    const call = callsMem.find((c) => c.id === id && c.tenantId === tenantId);
+    if (!call) return res.status(404).json({ ok: false, error: "not_found" });
+    const events = callEventsMem.filter((e) => e.callId === id).sort((a, b) => a.ts.localeCompare(b.ts));
+    const transcript = transcriptsMem.filter((t) => t.callId === id).sort((a, b) => a.ts.localeCompare(b.ts));
+    return res.json({ ok: true, call, events, transcript });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: "call_get_failed", message: e?.message });
+  }
+});
+
+// --- Phone Numbers: tenant-scoped list & admin provisioning ---
+app.get("/phone-numbers", async (req: Request, res: Response) => {
+  const tenantId = String(req.header("x-tenant-id") || "default");
+  try {
+    if (process.env.DATABASE_URL) {
+      const prisma = getPrisma();
+      const numbers = await prisma.phoneNumber.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" } });
+      return res.json({ ok: true, numbers });
+    }
+    const numbers = phoneNumbersMem.filter((n) => n.tenantId === tenantId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return res.json({ ok: true, numbers });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: "phone_numbers_list_failed", message: e?.message });
+  }
+});
+
+app.get("/admin/phone-numbers", requireAdmin, async (_req: Request, res: Response) => {
+  if (!ensureDbConfigured(res)) return;
+  try {
+    const prisma = getPrisma();
+    const numbers = await prisma.phoneNumber.findMany({ orderBy: { createdAt: "desc" } });
+    return res.json({ ok: true, numbers });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: "db_error", message: e?.message });
+  }
+});
+
+app.post("/admin/phone-numbers", requireAdmin, async (req: Request, res: Response) => {
+  if (!ensureDbConfigured(res)) return;
+  const e164 = String((req.body || {}).e164 || "").trim();
+  const headerTenant = String(req.header("x-tenant-id") || "").trim();
+  const tenantId = String((req.body || {}).tenantId || headerTenant || "").trim();
+  const label = (req.body || {}).label ? String((req.body || {}).label) : null;
+  if (!/^\+\d{7,15}$/.test(e164) || !tenantId) return res.status(400).json({ ok: false, error: "invalid_input" });
+  try {
+    const prisma = getPrisma();
+    const number = await prisma.phoneNumber.create({ data: { e164, tenantId, label, provider: "twilio" } });
+    return res.json({ ok: true, number });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: "db_error", message: e?.message });
+  }
+});
+
+app.delete("/admin/phone-numbers/:id", requireAdmin, async (req: Request, res: Response) => {
+  if (!ensureDbConfigured(res)) return;
+  const id = String(req.params.id || "");
+  if (!id) return res.status(400).json({ ok: false, error: "invalid_input" });
+  try {
+    const prisma = getPrisma();
+    await prisma.phoneNumber.delete({ where: { id } });
+    return res.json({ ok: true });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: "db_error", message: e?.message });
+  }
 });
 
 // Confirm a lead via token
