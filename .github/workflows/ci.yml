@@ -20,10 +20,16 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile=false
-      - name: Build packages
-        run: pnpm --filter @omniagents/db build
+      - name: Generate Prisma Client
+        run: pnpm --filter @omniagents/db prisma:generate
       - name: Build API
         run: pnpm --filter @omniagents/api build
+      - name: Build Admin
+        run: pnpm --filter @omniagents/admin build
+        env:
+          SKIP_ENV_VALIDATION: true
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+          CLERK_SECRET_KEY: sk_test_placeholder
       - name: Build Web App
         run: pnpm --filter @omniagents/web build
         env:
