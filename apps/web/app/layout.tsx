@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import "./globals.css";
-import Providers from "./providers";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const ogImage = process.env.NEXT_PUBLIC_OG_IMAGE || "";
@@ -42,13 +42,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <html lang="en">
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: inline }} />
-      </head>
-      <body>
-        <Providers>{content}</Providers>
-      </body>
-    </html>
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+      <html lang="en">
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: inline }} />
+        </head>
+        <body>
+          {content}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
