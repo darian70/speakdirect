@@ -19,9 +19,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-      - name: Clean cache
-        run: rm -rf .next node_modules/.cache apps/*/.next apps/*/node_modules/.cache
+      - name: Clean all caches and build artifacts
+        run: |
+          rm -rf .next node_modules/.cache apps/*/.next apps/*/node_modules/.cache website/.next
+          rm -rf ~/.pnpm-store
+          find . -name ".turbo" -type d -exec rm -rf {} + 2>/dev/null || true
       - name: Install dependencies (include devDependencies)
         run: NODE_ENV=development pnpm install --frozen-lockfile=false
       - name: Generate Prisma Client
