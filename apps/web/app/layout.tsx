@@ -42,13 +42,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <html lang="en">
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: inline }} />
-      </head>
-      <body>
-        <ClerkProvider>{content}</ClerkProvider>
-      </body>
-    </html>
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+      <html lang="en">
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: inline }} />
+        </head>
+        <body>
+          {content}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
