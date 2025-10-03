@@ -1,9 +1,6 @@
-import { NextResponse } from 'next/server'
 import { clerkMiddleware } from '@clerk/nextjs/server'
 
-export default clerkMiddleware({
-  signInUrl: '/sign-in',
-})
+export default clerkMiddleware()
 
 export const config = {
   matcher: [
@@ -13,6 +10,5 @@ export const config = {
     '/settings/:path*',
     '/billing/:path*',
     '/console/:path*',
-    '/(api|trpc)(.*)',
   ],
 }
