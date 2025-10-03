@@ -24,3 +24,6 @@ apps/api/.env
 __pycache__/
 *.pyc
 .venv/
+
+# Old/archived projects
+Auto service phone caller/
