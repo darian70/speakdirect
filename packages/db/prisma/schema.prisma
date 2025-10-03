@@ -1,7 +1,3 @@
-// Prisma schema for multi-tenant SaaS
-// DB: Neon Postgres (recommended)
-// Run: pnpm --filter @omniagents/db prisma:migrate:dev
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,77 +8,58 @@ datasource db {
 }
 
 model Tenant {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  memberships Membership[]
-  agents      Agent[]
-  entitlements Entitlement[]
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  agents        Agent[]
+  calls         Call[]
+  entitlements  Entitlement[]
+  memberships   Membership[]
+  phoneNumbers  PhoneNumber[]
   subscriptions Subscription[]
-  usage       UsageEvent[]
-  // Back-relations
-  calls       Call[]
-  phoneNumbers PhoneNumber[]
+  usage         UsageEvent[]
 }
 
 model User {
-  id          String   @id @default(cuid())
-  // External ID from identity provider (Clerk/Auth0)
-  externalId  String   @unique
-  email       String   @unique
+  id          String       @id @default(cuid())
+  externalId  String       @unique
+  email       String       @unique
   name        String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
   memberships Membership[]
 }
 
 model Membership {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   role      Role
   userId    String
   tenantId  String
   createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  tenant Tenant @relation(fields: [tenantId], references: [id])
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, tenantId])
 }
 
-enum Role {
-  owner
-  admin
-  operator
-  viewer
-}
-
 model Agent {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   tenantId  String
   name      String
   status    AgentStatus @default(DRAFT)
   config    Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-}
-
-enum AgentStatus {
-  DRAFT
-  ACTIVE
-  PAUSED
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
 }
 
 model Entitlement {
-  id        String   @id @default(cuid())
-  tenantId  String
-  key       String
-  // optional value, e.g., quota amounts
-  value     String?
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
+  id       String  @id @default(cuid())
+  tenantId String
+  key      String
+  value    String?
+  tenant   Tenant  @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, key])
 }
@@ -90,56 +67,50 @@ model Entitlement {
 model Subscription {
   id         String   @id @default(cuid())
   tenantId   String
-  provider   String   // "stripe"
+  provider   String
   customerId String
   priceId    String?
   status     String
   meta       Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 model UsageEvent {
-  id        String   @id @default(cuid())
-  tenantId  String
-  type      String   // e.g., "message", "minute", "call", "inference"
-  amount    Int      // count of units
-  ts        DateTime @default(now())
-  meta      Json?
+  id       String   @id @default(cuid())
+  tenantId String
+  type     String
+  amount   Int
+  ts       DateTime @default(now())
+  meta     Json?
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
   @@index([tenantId, ts])
 }
 
 /// Telephony call record
 model Call {
-  id           String   @id @default(cuid())
-  tenantId     String
-  agentId      String?
-  provider     String?   // "twilio" | "livekit"
-  providerCallId String? // Twilio CallSid or LiveKit call identifier
-  direction    String    // "inbound" | "outbound"
-  from         String
-  to           String
-  status       String
-  startedAt    DateTime  @default(now())
-  endedAt      DateTime?
-  durationSec  Int?
-  recordingUrl String?
-  costCents    Int?
-  meta         Json?
-
-  // Optional association to provisioned phone number (for inbound calls)
-  phoneNumberId String?
-  phoneNumber   PhoneNumber? @relation(fields: [phoneNumberId], references: [id])
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
-  // Back-relations
-  events      CallEvent[]
-  transcripts Transcript[]
+  id             String       @id @default(cuid())
+  tenantId       String
+  agentId        String?
+  provider       String?
+  providerCallId String?
+  direction      String
+  from           String
+  to             String
+  status         String
+  startedAt      DateTime     @default(now())
+  endedAt        DateTime?
+  durationSec    Int?
+  recordingUrl   String?
+  costCents      Int?
+  meta           Json?
+  phoneNumberId  String?
+  phoneNumber    PhoneNumber? @relation(fields: [phoneNumberId], references: [id])
+  tenant         Tenant       @relation(fields: [tenantId], references: [id])
+  events         CallEvent[]
+  transcripts    Transcript[]
 
   @@index([tenantId, startedAt])
   @@index([provider, providerCallId])
@@ -151,19 +122,19 @@ model CallEvent {
   type    String
   ts      DateTime @default(now())
   payload Json?
+  call    Call     @relation(fields: [callId], references: [id])
 
-  call Call @relation(fields: [callId], references: [id])
   @@index([callId, ts])
 }
 
 model Transcript {
   id      String   @id @default(cuid())
   callId  String
-  channel String   // "agent" | "caller"
+  channel String
   text    String
   ts      DateTime @default(now())
+  call    Call     @relation(fields: [callId], references: [id])
 
-  call Call @relation(fields: [callId], references: [id])
   @@index([callId, ts])
 }
 
@@ -173,10 +144,21 @@ model PhoneNumber {
   tenantId  String
   e164      String   @unique
   label     String?
-  provider  String?  // "twilio"
+  provider  String?
   createdAt DateTime @default(now())
+  calls     Call[]
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+}
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-  // Back-relations
-  calls  Call[]
+enum Role {
+  owner
+  admin
+  operator
+  viewer
+}
+
+enum AgentStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
 }
