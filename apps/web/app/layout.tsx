@@ -47,11 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: inline }} />
       </head>
       <body>
-        {clerkPk ? (
-          <ClerkProvider publishableKey={clerkPk}>{content}</ClerkProvider>
-        ) : (
-          content
-        )}
+        <ClerkProvider>{content}</ClerkProvider>
       </body>
     </html>
   );
