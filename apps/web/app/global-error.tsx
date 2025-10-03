@@ -1,11 +1,12 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
+// Sentry temporarily disabled for deployment
+// import * as Sentry from "@sentry/nextjs";
 import React from "react";
 
 export default function GlobalError({ error, reset }: { error: Error; reset: () => void }) {
   // Report error to Sentry
-  Sentry.captureException(error);
+  // Sentry.captureException(error);
 
   return (
     <html>
