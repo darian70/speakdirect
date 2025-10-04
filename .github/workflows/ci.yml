@@ -9,7 +9,7 @@ jobs:
   build-monorepo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           clean: true
       - uses: pnpm/action-setup@v3
@@ -51,7 +51,7 @@ jobs:
   # build-website:
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v5
   #       with:
   #         clean: true
   #     - name: Setup Node
@@ -70,7 +70,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   continue-on-error: true
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v5
   #       with:
   #         clean: true
   #     - name: Setup Node
@@ -89,7 +89,7 @@ jobs:
   # prompt-evals:
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v5
   #     - name: Setup Node
   #       uses: actions/setup-node@v4
   #       with:
