@@ -699,26 +699,66 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
 
 // Handle speech input from Gather
 app.post("/twilio/voice/gather", (req: Request, res: Response) => {
-  const speechResult = String((req.body as any)?.SpeechResult || "");
+  const speechResult = String((req.body as any)?.SpeechResult || "").toLowerCase();
   
-  // Simple response based on what they said
-  let response = "I heard you say: " + speechResult + ". Let me help you with that.";
+  let response = "";
+  let followUp = "Is there anything else I can help you with?";
   
-  if (speechResult.toLowerCase().includes("appointment") || speechResult.toLowerCase().includes("schedule")) {
-    response = "I can help you schedule an appointment. What day works best for you?";
-  } else if (speechResult.toLowerCase().includes("price") || speechResult.toLowerCase().includes("cost")) {
-    response = "Our standard service starts at $50. Would you like to schedule an appointment?";
-  } else if (speechResult.toLowerCase().includes("hours") || speechResult.toLowerCase().includes("open")) {
-    response = "We're open Monday through Friday, 8 AM to 6 PM, and Saturday 9 AM to 3 PM.";
+  // Appointment scheduling
+  if (speechResult.includes("appointment") || speechResult.includes("schedule") || speechResult.includes("book")) {
+    if (speechResult.includes("monday") || speechResult.includes("tuesday") || speechResult.includes("wednesday") || 
+        speechResult.includes("thursday") || speechResult.includes("friday") || speechResult.includes("saturday")) {
+      response = "Perfect! I've noted your preferred day. What time works best for you? We have morning slots from 8 to noon, and afternoon slots from 1 to 5 PM.";
+    } else {
+      response = "I'd be happy to help you schedule an appointment. What day works best for you this week?";
+    }
+  }
+  // Pricing questions
+  else if (speechResult.includes("price") || speechResult.includes("cost") || speechResult.includes("how much") || speechResult.includes("charge")) {
+    if (speechResult.includes("oil") || speechResult.includes("change")) {
+      response = "An oil change is $49.99 and takes about 30 minutes. Would you like to schedule one?";
+    } else if (speechResult.includes("brake")) {
+      response = "Brake service starts at $199.99 depending on your vehicle. We can give you an exact quote when you come in. Would you like to schedule an inspection?";
+    } else {
+      response = "Our services range from $49.99 for an oil change to $199 and up for brake service. What type of service are you interested in?";
+    }
+  }
+  // Hours/location
+  else if (speechResult.includes("hour") || speechResult.includes("open") || speechResult.includes("close") || speechResult.includes("when")) {
+    response = "We're open Monday through Friday from 8 AM to 6 PM, and Saturday from 9 AM to 3 PM. We're closed on Sundays.";
+  }
+  else if (speechResult.includes("location") || speechResult.includes("address") || speechResult.includes("where")) {
+    response = "We're located at 123 Main Street. You can find us right next to the shopping center. Would you like directions?";
+  }
+  // Service questions
+  else if (speechResult.includes("service") || speechResult.includes("repair") || speechResult.includes("fix")) {
+    response = "We offer oil changes, brake service, tire rotation, engine diagnostics, and general repairs. What do you need help with?";
+  }
+  // Greeting/help
+  else if (speechResult.includes("hello") || speechResult.includes("hi") || speechResult.includes("hey")) {
+    response = "Hello! Thanks for calling. How can I help you today?";
+  }
+  // Confirmation/yes
+  else if (speechResult.includes("yes") || speechResult.includes("yeah") || speechResult.includes("sure") || speechResult.includes("okay")) {
+    response = "Great! Let me get that scheduled for you. What's your name and phone number?";
+    followUp = "I'll have someone call you back to confirm the details.";
+  }
+  // Negative/no
+  else if (speechResult.includes("no") || speechResult.includes("not") || speechResult.includes("cancel")) {
+    response = "No problem! Is there anything else I can help you with?";
+  }
+  // Default
+  else {
+    response = "I understand you said: " + speechResult + ". Let me connect you with someone who can help. Or, you can ask about our hours, pricing, or schedule an appointment.";
   }
   
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Matthew">${response}</Say>
+  <Say voice="Polly.Joanna">${response}</Say>
   <Gather input="speech" action="/twilio/voice/gather" timeout="5" speechTimeout="auto">
-    <Say voice="Polly.Matthew">Is there anything else I can help you with?</Say>
+    <Say voice="Polly.Joanna">${followUp}</Say>
   </Gather>
-  <Say voice="Polly.Matthew">Thank you for calling. Have a great day!</Say>
+  <Say voice="Polly.Joanna">Thank you for calling. Have a great day!</Say>
   <Hangup/>
 </Response>`;
   
