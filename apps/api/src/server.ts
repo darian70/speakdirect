@@ -636,9 +636,17 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
     console.warn("[inbound] failed to create call record:", (e as any)?.message || e);
   }
 
-  // Respond with TwiML
+  // Respond with TwiML - Simple AI response
   if (!VOICE_BRIDGE_WSS_URL) {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Say voice="Polly.Matthew">Thanks for calling. A technician will get back to you shortly.</Say>\n  <Pause length="3"/>\n  <Hangup/>\n</Response>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Matthew">Hello! Thank you for calling. I'm your AI assistant. How can I help you today?</Say>
+  <Gather input="speech" action="/twilio/voice/gather" timeout="5" speechTimeout="auto">
+    <Say voice="Polly.Matthew">Please tell me what you need help with.</Say>
+  </Gather>
+  <Say voice="Polly.Matthew">I didn't hear anything. Goodbye!</Say>
+  <Hangup/>
+</Response>`;
     res.type("text/xml").send(xml);
     return;
   }
@@ -650,6 +658,34 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
     streamUrl = u.toString();
   } catch { /* leave as-is if invalid */ }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Start>\n    <Stream url="${streamUrl}" />\n  </Start>\n  <Say>Streaming audio. You are connected.</Say>\n  <Pause length="60"/>\n</Response>`;
+  res.type("text/xml").send(xml);
+});
+
+// Handle speech input from Gather
+app.post("/twilio/voice/gather", (req: Request, res: Response) => {
+  const speechResult = String((req.body as any)?.SpeechResult || "");
+  
+  // Simple response based on what they said
+  let response = "I heard you say: " + speechResult + ". Let me help you with that.";
+  
+  if (speechResult.toLowerCase().includes("appointment") || speechResult.toLowerCase().includes("schedule")) {
+    response = "I can help you schedule an appointment. What day works best for you?";
+  } else if (speechResult.toLowerCase().includes("price") || speechResult.toLowerCase().includes("cost")) {
+    response = "Our standard service starts at $50. Would you like to schedule an appointment?";
+  } else if (speechResult.toLowerCase().includes("hours") || speechResult.toLowerCase().includes("open")) {
+    response = "We're open Monday through Friday, 8 AM to 6 PM, and Saturday 9 AM to 3 PM.";
+  }
+  
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Matthew">${response}</Say>
+  <Gather input="speech" action="/twilio/voice/gather" timeout="5" speechTimeout="auto">
+    <Say voice="Polly.Matthew">Is there anything else I can help you with?</Say>
+  </Gather>
+  <Say voice="Polly.Matthew">Thank you for calling. Have a great day!</Say>
+  <Hangup/>
+</Response>`;
+  
   res.type("text/xml").send(xml);
 });
 
