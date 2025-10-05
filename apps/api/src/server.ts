@@ -324,15 +324,10 @@ function validateTwilioRequest(req: Request): boolean {
     }
     const signature = String(req.header("x-twilio-signature") || "");
     const path = req.originalUrl || "/";
-    // Build the full URL - use the actual request host/protocol if API_PUBLIC_URL not set
-    let url: string;
-    if (API_PUBLIC_URL) {
-      url = `${API_PUBLIC_URL.replace(/\/$/, "")}${path}`;
-    } else {
-      const protocol = req.get('x-forwarded-proto') || (req as any).protocol || "https";
-      const host = req.get('host') || "localhost";
-      url = `${protocol}://${host}${path}`;
-    }
+    // Build the full URL - MUST use the actual request host that Twilio sent to
+    const protocol = req.get('x-forwarded-proto') || (req as any).protocol || "https";
+    const host = req.get('host') || "localhost";
+    const url = `${protocol}://${host}${path}`;
     
     console.log("[twilio-validate] Validating request:");
     console.log("  - URL:", url);
