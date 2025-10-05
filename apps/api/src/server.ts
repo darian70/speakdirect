@@ -338,6 +338,10 @@ function validateTwilioRequest(req: Request): boolean {
     console.log("  - URL:", url);
     console.log("  - Signature:", signature.substring(0, 20) + "...");
     console.log("  - Has auth token:", !!TWILIO_AUTH_TOKEN);
+    console.log("  - Auth token (first 8 chars):", TWILIO_AUTH_TOKEN.substring(0, 8));
+    console.log("  - Request body keys:", Object.keys((req as any).body || {}));
+    console.log("  - Protocol:", req.get('x-forwarded-proto') || (req as any).protocol);
+    console.log("  - Host:", req.get('host'));
     
     // For urlencoded, req.body is a plain object; for JSON, Twilio won't use JSON for these webhooks
     // Use the library's helper directly to avoid typing issues
@@ -345,6 +349,14 @@ function validateTwilioRequest(req: Request): boolean {
     const { validateRequest } = require('twilio/lib/webhooks/webhooks');
     const isValid = validateRequest(TWILIO_AUTH_TOKEN, signature, url, (req as any).body || {});
     console.log("[twilio-validate] Result:", isValid);
+    
+    if (!isValid) {
+      console.error("[twilio-validate] FAILED - Check:");
+      console.error("  1. TWILIO_AUTH_TOKEN matches Twilio Console exactly");
+      console.error("  2. Webhook URL in Twilio matches:", url);
+      console.error("  3. No proxy/CDN modifying requests");
+    }
+    
     return isValid;
   } catch (error) {
     console.error("[twilio-validate] Error:", error);
