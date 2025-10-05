@@ -577,15 +577,19 @@ app.get("/twiml/bridge", (req: Request, res: Response) => {
 // TwiML endpoint for inbound calls. Twilio sends application/x-www-form-urlencoded.
 // Configure your Twilio number Voice webhook to POST to: ${API_PUBLIC_URL}/twilio/voice/inbound
 app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
-  // Validate Twilio signature in production
-  if (isProd && TWILIO_AUTH_TOKEN && !validateTwilioRequest(req)) {
-    console.error("[inbound] Invalid Twilio signature - rejecting call");
-    return res.status(403).type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?><Response><Reject reason="rejected"/></Response>`);
-  }
-  // Extract common Twilio params
-  const from = String((req.body as any)?.From || "");
-  const to = String((req.body as any)?.To || "");
-  const callSid = String((req.body as any)?.CallSid || "");
+  try {
+    console.log("[inbound] Received call - From:", req.body?.From, "To:", req.body?.To, "CallSid:", req.body?.CallSid);
+    
+    // Validate Twilio signature in production
+    if (isProd && TWILIO_AUTH_TOKEN && !validateTwilioRequest(req)) {
+      console.error("[inbound] Invalid Twilio signature - rejecting call");
+      return res.status(403).type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?><Response><Reject reason="rejected"/></Response>`);
+    }
+    
+    // Extract common Twilio params
+    const from = String((req.body as any)?.From || "");
+    const to = String((req.body as any)?.To || "");
+    const callSid = String((req.body as any)?.CallSid || "");
 
   // Resolve tenant by provisioned phone number (To)
   let tenantId = "default";
@@ -660,6 +664,11 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
   } catch { /* leave as-is if invalid */ }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Start>\n    <Stream url="${streamUrl}" />\n  </Start>\n  <Say>Streaming audio. You are connected.</Say>\n  <Pause length="60"/>\n</Response>`;
   res.type("text/xml").send(xml);
+  } catch (error) {
+    console.error("[inbound] Error processing call:", error);
+    const xml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say>Sorry, an error occurred. Please try again later.</Say><Hangup/></Response>`;
+    res.type("text/xml").send(xml);
+  }
 });
 
 // Handle speech input from Gather
