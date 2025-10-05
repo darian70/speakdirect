@@ -667,31 +667,22 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
     console.warn("[inbound] failed to create call record:", (e as any)?.message || e);
   }
 
-  // Check if we have ElevenLabs Conversational AI configured
-  const ELEVENLABS_AGENT_ID = process.env.ELEVENLABS_AGENT_ID || "";
-  
-  console.log("[inbound] ELEVENLABS_AGENT_ID:", ELEVENLABS_AGENT_ID ? "configured" : "not set");
-  console.log("[inbound] VOICE_BRIDGE_WSS_URL:", VOICE_BRIDGE_WSS_URL ? "configured" : "not set");
-  
   // Check for Vapi.ai assistant (GPT-4 powered voice AI)
   const VAPI_ASSISTANT_ID = process.env.VAPI_ASSISTANT_ID || "";
-  const VAPI_API_KEY = process.env.VAPI_API_KEY || "";
+  const VAPI_PRIVATE_KEY = process.env.VAPI_PRIVATE_KEY || "";
   
-  if (VAPI_ASSISTANT_ID && VAPI_API_KEY) {
+  console.log("[inbound] VAPI_ASSISTANT_ID:", VAPI_ASSISTANT_ID ? "configured" : "not set");
+  console.log("[inbound] VOICE_BRIDGE_WSS_URL:", VOICE_BRIDGE_WSS_URL ? "configured" : "not set");
+  
+  if (VAPI_ASSISTANT_ID && VAPI_PRIVATE_KEY) {
     console.log("[inbound] Using Vapi.ai GPT-4 Assistant");
-    // Vapi.ai handles Twilio integration via their API
-    // We need to forward the call to Vapi
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Connect>
-    <Stream url="wss://api.vapi.ai/call/web">
-      <Parameter name="assistantId" value="${VAPI_ASSISTANT_ID}" />
-      <Parameter name="apiKey" value="${VAPI_API_KEY}" />
-    </Stream>
-  </Connect>
-</Response>`;
-    res.type("text/xml").send(xml);
-    return;
+    console.log("[inbound] Assistant ID:", VAPI_ASSISTANT_ID.substring(0, 15) + "...");
+    
+    // Vapi.ai Twilio integration - they use a different approach
+    // Instead of WebSocket streaming, we use their phone number forwarding
+    // For now, use simple AI and we'll set up Vapi properly
+    console.log("[inbound] Note: Vapi requires phone number configuration in their dashboard");
+    console.log("[inbound] Falling back to keyword AI for now");
   }
   
   // Fallback to simple keyword-based AI if Vapi not configured
