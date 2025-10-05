@@ -1,50 +1,71 @@
 # 🚀 Full AI Phone System Setup - Production Ready
 
-Complete setup for GPT-4 voice AI with calendar booking and CRM integration.
+Complete setup for GPT-4 voice AI with calendar booking and CRM integration using **ElevenLabs Conversational AI**.
 
 ---
 
 ## Architecture
 
 ```
-Customer Call → Twilio → Voice Bridge (GPT-4 Realtime) → n8n → Calendar/CRM
+Customer Call → Twilio → ElevenLabs Conversational AI (GPT-4) → n8n → Calendar/CRM
                                 ↓
                          Appointment Booked
                          Email Sent
                          CRM Updated
 ```
 
+**Why ElevenLabs**: All-in-one voice + GPT-4, built for phone calls, simpler than OpenAI Realtime API.
+
 ---
 
-## Part 1: OpenAI Realtime API Setup (30 min)
+## Part 1: ElevenLabs Conversational AI Setup (15 min)
 
-### 1.1 Get OpenAI API Key
-1. Go to https://platform.openai.com/api-keys
-2. Create new secret key
-3. Copy it (starts with `sk-proj-...`)
-4. Add to Render environment: `OPENAI_API_KEY=sk-proj-...`
+### 1.1 Create ElevenLabs Account
+1. Go to https://elevenlabs.io
+2. Sign up for **Conversational AI** plan ($99/mo for unlimited)
+3. Or start with free tier to test
 
-### 1.2 Deploy Voice Bridge
-```bash
-cd apps/voice-bridge
-pnpm install
-pnpm build
+### 1.2 Create Your AI Agent
+1. Dashboard → **Conversational AI** → **Create Agent**
+2. Configure:
+   - **Name**: Auto Shop Receptionist
+   - **Voice**: Choose a professional voice (e.g., "Rachel" or "Drew")
+   - **Language Model**: GPT-4
+   - **System Prompt**: (see below)
+
+### 1.3 System Prompt for Auto Shop
+```
+You are a friendly and professional receptionist for Mike's Auto Shop.
+
+BUSINESS INFO:
+- Hours: Monday-Friday 8am-6pm, Saturday 9am-3pm, Closed Sunday
+- Location: 123 Main Street, San Diego, CA 92101
+- Phone: (619) 555-0123
+
+SERVICES & PRICING:
+- Oil Change: $49.99 (30 minutes)
+- Brake Service: $199.99+ (2 hours)
+- Tire Rotation: $29.99 (20 minutes)
+- Engine Diagnostics: $89.99 (1 hour)
+
+YOUR ROLE:
+1. Greet customers warmly
+2. Answer questions about services, pricing, hours
+3. Schedule appointments - collect: name, phone, date, time, service
+4. When appointment is confirmed, call the webhook to book it
+
+APPOINTMENT BOOKING:
+When you have all details (name, phone, date, time, service), say:
+"Perfect! Let me book that for you right now..."
+Then call the webhook with the appointment data.
+
+WEBHOOK URL: https://your-n8n.com/webhook/appointment
 ```
 
-Deploy to Render:
-- **Name**: `speakdirect-voice-bridge`
-- **Root Directory**: `apps/voice-bridge`
-- **Build Command**: `pnpm install && pnpm build`
-- **Start Command**: `pnpm start`
-- **Environment Variables**:
-  - `OPENAI_API_KEY`: Your OpenAI key
-  - `PORT`: 8082
-
-### 1.3 Update API to Use Voice Bridge
-Add to Render API environment:
-```
-VOICE_BRIDGE_WSS_URL=wss://speakdirect-voice-bridge.onrender.com/stream
-```
+### 1.4 Get Agent ID
+- Copy your Agent ID from ElevenLabs dashboard
+- Format: `agent_...`
+- Save for next step
 
 ---
 

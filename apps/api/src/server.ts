@@ -667,15 +667,32 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
     console.warn("[inbound] failed to create call record:", (e as any)?.message || e);
   }
 
-  // Respond with TwiML - Simple AI response
+  // Check if we have ElevenLabs Conversational AI configured
+  const ELEVENLABS_AGENT_ID = process.env.ELEVENLABS_AGENT_ID || "";
+  
+  if (ELEVENLABS_AGENT_ID) {
+    // Use ElevenLabs Conversational AI (GPT-4 powered)
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Connect>
+    <Stream url="wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${ELEVENLABS_AGENT_ID}">
+      <Parameter name="api_key" value="${process.env.ELEVENLABS_API_KEY || ''}" />
+    </Stream>
+  </Connect>
+</Response>`;
+    res.type("text/xml").send(xml);
+    return;
+  }
+  
+  // Fallback to simple keyword-based AI if ElevenLabs not configured
   if (!VOICE_BRIDGE_WSS_URL) {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Matthew">Hello! Thank you for calling. I'm your AI assistant. How can I help you today?</Say>
+  <Say voice="Polly.Joanna">Hello! Thank you for calling. I'm your AI assistant. How can I help you today?</Say>
   <Gather input="speech" action="/twilio/voice/gather" timeout="5" speechTimeout="auto">
-    <Say voice="Polly.Matthew">Please tell me what you need help with.</Say>
+    <Say voice="Polly.Joanna">Please tell me what you need help with.</Say>
   </Gather>
-  <Say voice="Polly.Matthew">I didn't hear anything. Goodbye!</Say>
+  <Say voice="Polly.Joanna">I didn't hear anything. Goodbye!</Say>
   <Hangup/>
 </Response>`;
     res.type("text/xml").send(xml);
