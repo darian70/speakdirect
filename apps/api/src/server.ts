@@ -675,13 +675,17 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
   
   if (ELEVENLABS_AGENT_ID) {
     console.log("[inbound] Using ElevenLabs Conversational AI");
+    console.log("[inbound] Agent ID:", ELEVENLABS_AGENT_ID.substring(0, 10) + "...");
+    
     // Use ElevenLabs Conversational AI (GPT-4 powered)
+    // Note: ElevenLabs uses a different integration method - they handle Twilio directly
+    // We need to use their signed URL approach
+    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || '';
+    
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Connect>
-    <Stream url="wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${ELEVENLABS_AGENT_ID}">
-      <Parameter name="api_key" value="${process.env.ELEVENLABS_API_KEY || ''}" />
-    </Stream>
+    <Stream url="wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${ELEVENLABS_AGENT_ID}&amp;api_key=${ELEVENLABS_API_KEY}" />
   </Connect>
 </Response>`;
     res.type("text/xml").send(xml);
