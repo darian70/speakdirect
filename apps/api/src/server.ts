@@ -670,7 +670,11 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
   // Check if we have ElevenLabs Conversational AI configured
   const ELEVENLABS_AGENT_ID = process.env.ELEVENLABS_AGENT_ID || "";
   
+  console.log("[inbound] ELEVENLABS_AGENT_ID:", ELEVENLABS_AGENT_ID ? "configured" : "not set");
+  console.log("[inbound] VOICE_BRIDGE_WSS_URL:", VOICE_BRIDGE_WSS_URL ? "configured" : "not set");
+  
   if (ELEVENLABS_AGENT_ID) {
+    console.log("[inbound] Using ElevenLabs Conversational AI");
     // Use ElevenLabs Conversational AI (GPT-4 powered)
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -686,6 +690,7 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
   
   // Fallback to simple keyword-based AI if ElevenLabs not configured
   if (!VOICE_BRIDGE_WSS_URL) {
+    console.log("[inbound] Using simple keyword-based AI");
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Polly.Joanna">Hello! Thank you for calling. I'm your AI assistant. How can I help you today?</Say>
@@ -698,6 +703,8 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
     res.type("text/xml").send(xml);
     return;
   }
+  
+  console.log("[inbound] Using voice bridge (if configured)");
   // Append tenant id as a query param for observability in the bridge
   let streamUrl = VOICE_BRIDGE_WSS_URL;
   try {
