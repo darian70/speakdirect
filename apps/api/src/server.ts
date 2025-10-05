@@ -318,17 +318,29 @@ const twilioClient = haveTwilio ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) 
 
 function validateTwilioRequest(req: Request): boolean {
   try {
-    if (!TWILIO_AUTH_TOKEN) return true;
+    if (!TWILIO_AUTH_TOKEN) {
+      console.log("[twilio-validate] No TWILIO_AUTH_TOKEN - skipping validation");
+      return true;
+    }
     const signature = String(req.header("x-twilio-signature") || "");
     const path = req.originalUrl || "/";
     const base = API_PUBLIC_URL || `${(req as any).protocol || "http"}://${req.get("host") || "localhost"}`;
     const url = `${base.replace(/\/$/, "")}${path}`;
+    
+    console.log("[twilio-validate] Validating request:");
+    console.log("  - URL:", url);
+    console.log("  - Signature:", signature.substring(0, 20) + "...");
+    console.log("  - Has auth token:", !!TWILIO_AUTH_TOKEN);
+    
     // For urlencoded, req.body is a plain object; for JSON, Twilio won't use JSON for these webhooks
     // Use the library's helper directly to avoid typing issues
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { validateRequest } = require('twilio/lib/webhooks/webhooks');
-    return validateRequest(TWILIO_AUTH_TOKEN, signature, url, (req as any).body || {});
-  } catch {
+    const isValid = validateRequest(TWILIO_AUTH_TOKEN, signature, url, (req as any).body || {});
+    console.log("[twilio-validate] Result:", isValid);
+    return isValid;
+  } catch (error) {
+    console.error("[twilio-validate] Error:", error);
     return false;
   }
 }
