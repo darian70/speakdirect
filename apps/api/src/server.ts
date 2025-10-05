@@ -673,18 +673,28 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
   console.log("[inbound] ELEVENLABS_AGENT_ID:", ELEVENLABS_AGENT_ID ? "configured" : "not set");
   console.log("[inbound] VOICE_BRIDGE_WSS_URL:", VOICE_BRIDGE_WSS_URL ? "configured" : "not set");
   
-  // NOTE: ElevenLabs Conversational AI doesn't support direct Twilio WebSocket integration
-  // For now, we'll use the keyword-based AI with ElevenLabs voice generation
-  // To use ElevenLabs Conversational AI, you need to:
-  // 1. Use their provided phone number, OR
-  // 2. Implement their REST API for conversation management
+  // Check for Vapi.ai assistant (GPT-4 powered voice AI)
+  const VAPI_ASSISTANT_ID = process.env.VAPI_ASSISTANT_ID || "";
+  const VAPI_API_KEY = process.env.VAPI_API_KEY || "";
   
-  // Commenting out direct integration attempt:
-  // if (ELEVENLABS_AGENT_ID) {
-  //   console.log("[inbound] ElevenLabs direct integration not supported");
-  // }
+  if (VAPI_ASSISTANT_ID && VAPI_API_KEY) {
+    console.log("[inbound] Using Vapi.ai GPT-4 Assistant");
+    // Vapi.ai handles Twilio integration via their API
+    // We need to forward the call to Vapi
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Connect>
+    <Stream url="wss://api.vapi.ai/call/web">
+      <Parameter name="assistantId" value="${VAPI_ASSISTANT_ID}" />
+      <Parameter name="apiKey" value="${VAPI_API_KEY}" />
+    </Stream>
+  </Connect>
+</Response>`;
+    res.type("text/xml").send(xml);
+    return;
+  }
   
-  // Fallback to simple keyword-based AI if ElevenLabs not configured
+  // Fallback to simple keyword-based AI if Vapi not configured
   if (!VOICE_BRIDGE_WSS_URL) {
     console.log("[inbound] Using simple keyword-based AI");
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
