@@ -673,24 +673,16 @@ app.post("/twilio/voice/inbound", async (req: Request, res: Response) => {
   console.log("[inbound] ELEVENLABS_AGENT_ID:", ELEVENLABS_AGENT_ID ? "configured" : "not set");
   console.log("[inbound] VOICE_BRIDGE_WSS_URL:", VOICE_BRIDGE_WSS_URL ? "configured" : "not set");
   
-  if (ELEVENLABS_AGENT_ID) {
-    console.log("[inbound] Using ElevenLabs Conversational AI");
-    console.log("[inbound] Agent ID:", ELEVENLABS_AGENT_ID.substring(0, 10) + "...");
-    
-    // Use ElevenLabs Conversational AI (GPT-4 powered)
-    // Note: ElevenLabs uses a different integration method - they handle Twilio directly
-    // We need to use their signed URL approach
-    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || '';
-    
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Connect>
-    <Stream url="wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${ELEVENLABS_AGENT_ID}&amp;api_key=${ELEVENLABS_API_KEY}" />
-  </Connect>
-</Response>`;
-    res.type("text/xml").send(xml);
-    return;
-  }
+  // NOTE: ElevenLabs Conversational AI doesn't support direct Twilio WebSocket integration
+  // For now, we'll use the keyword-based AI with ElevenLabs voice generation
+  // To use ElevenLabs Conversational AI, you need to:
+  // 1. Use their provided phone number, OR
+  // 2. Implement their REST API for conversation management
+  
+  // Commenting out direct integration attempt:
+  // if (ELEVENLABS_AGENT_ID) {
+  //   console.log("[inbound] ElevenLabs direct integration not supported");
+  // }
   
   // Fallback to simple keyword-based AI if ElevenLabs not configured
   if (!VOICE_BRIDGE_WSS_URL) {
