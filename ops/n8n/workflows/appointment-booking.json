@@ -1,0 +1,148 @@
+{
+  "name": "Appointment Booking Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "appointment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-appointment",
+      "name": "Webhook - Appointment Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "calendarId": "primary",
+        "start": "={{ $json.appointmentDate }} {{ $json.appointmentTime }}",
+        "end": "={{ $json.appointmentDate }} {{ $json.appointmentTime }}",
+        "summary": "={{ $json.customerName }} - {{ $json.serviceType }}",
+        "description": "Customer: {{ $json.customerName }}\\nPhone: {{ $json.customerPhone }}\\nService: {{ $json.serviceType }}\\nEstimated Cost: {{ $json.estimatedCost }}",
+        "attendees": "={{ $json.customerEmail }}"
+      },
+      "id": "google-calendar",
+      "name": "Google Calendar - Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [450, 200],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "resource": "contact",
+        "additionalFields": {
+          "phone": "={{ $json.customerPhone }}",
+          "notes": "Appointment: {{ $json.serviceType }} on {{ $json.appointmentDate }}"
+        },
+        "email": "={{ $json.customerEmail }}",
+        "firstName": "={{ $json.customerName.split(' ')[0] }}",
+        "lastName": "={{ $json.customerName.split(' ')[1] || '' }}"
+      },
+      "id": "crm-contact",
+      "name": "CRM - Create/Update Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "credentials": {
+        "hubspotApi": {
+          "id": "2",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@speakdirect.xyz",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "Appointment Confirmed - {{ $json.serviceType }}",
+        "text": "Hi {{ $json.customerName }},\\n\\nYour appointment has been confirmed!\\n\\nService: {{ $json.serviceType }}\\nDate: {{ $json.appointmentDate }}\\nTime: {{ $json.appointmentTime }}\\nEstimated Cost: {{ $json.estimatedCost }}\\n\\nLocation:\\nMike's Auto Shop\\n123 Main Street\\nSan Diego, CA 92101\\n(619) 555-0123\\n\\nSee you then!\\n\\nBest regards,\\nMike's Auto Shop"
+      },
+      "id": "send-confirmation",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "smtp": {
+          "id": "3",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"appointmentId\": $node[\"Google Calendar - Create Event\"].json.id, \"message\": \"Appointment booked successfully\" } }}"
+      },
+      "id": "respond-success",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Appointment Request": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar - Create Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CRM - Create/Update Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar - Create Event": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM - Create/Update Contact": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "1"
+}
