@@ -16,7 +16,7 @@
     "express": "^4.19.2",
     "nodemailer": "^6.9.12",
     "twilio": "^4.21.0",
-    "zod": "^3.22.4"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
