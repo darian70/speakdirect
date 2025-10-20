@@ -16,7 +16,7 @@ jobs:
         with:
           version: 9.0.0
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
       - name: Clean all caches and build artifacts
@@ -55,7 +55,7 @@ jobs:
   #       with:
   #         clean: true
   #     - name: Setup Node
-  #       uses: actions/setup-node@v4
+  #       uses: actions/setup-node@v6
   #       with:
   #         node-version: 20
   #     - name: Install deps (website)
@@ -74,7 +74,7 @@ jobs:
   #       with:
   #         clean: true
   #     - name: Setup Node
-  #       uses: actions/setup-node@v4
+  #       uses: actions/setup-node@v6
   #       with:
   #         node-version: 20
   #     - name: Markdownlint
@@ -91,7 +91,7 @@ jobs:
   #   steps:
   #     - uses: actions/checkout@v4
   #     - name: Setup Node
-  #       uses: actions/setup-node@v4
+  #       uses: actions/setup-node@v6
   #       with:
   #         node-version: 20
   #     - name: Run prompt evaluations
